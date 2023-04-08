@@ -17,7 +17,7 @@ const Home: NextPage = () => {
   const { data, isLoading } = api.post.getPost.useQuery();
   const { data: session } = useSession();
 
-  // console.log({ posts: posts.data });
+  console.log({ session });
   if (session) {
     return (
       <>

@@ -5,6 +5,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
+import { prisma } from "~/server/db";
 
 export const postRouter = createTRPCRouter({
   hello: publicProcedure
@@ -18,21 +19,52 @@ export const postRouter = createTRPCRouter({
     return ctx.prisma.post.findMany();
     // return ctx.prisma.example.findMany();
   }),
-  createPost: publicProcedure
+  createPost: protectedProcedure
     .input(
       z.object({
         content: z.string(),
       })
     )
-    .mutation(({ input }) => {
-      return {
-        post: {
+    .mutation(({ input, ctx }) => {
+      const authorId = ctx.session.user.id;
+
+      if (!authorId) {
+        throw "Unauthorize Action";
+      }
+
+      const content = ctx.prisma.post.create({
+        data: {
           content: input.content,
+          authorId: authorId,
         },
-      };
+      });
+
+      console.log({ content });
+      return content;
     }),
-  getPost: protectedProcedure.query(({ ctx }) => {
+  getPost: protectedProcedure.query(async ({ ctx }) => {
     console.log({ ctx: ctx.session.user.id });
-    return ctx.prisma.post.findMany();
+    return await ctx.prisma.post.findMany({});
   }),
+  deletePost: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+      })
+    )
+    .mutation(({ ctx, input }) => {
+      const authorId = ctx.session.user.id;
+
+      if (!authorId) {
+        throw "Unauthorize Action";
+      }
+
+      const deletePost = ctx.prisma.post.delete({
+        where: {
+          id: input.id,
+        },
+      });
+
+      return deletePost;
+    }),
 });
