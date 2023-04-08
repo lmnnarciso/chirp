@@ -67,4 +67,31 @@ export const postRouter = createTRPCRouter({
 
       return deletePost;
     }),
+  createPostTransaction: protectedProcedure
+    .input(
+      z.object({
+        content: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const authorId = ctx.session.user.id;
+
+      if (!authorId) {
+        throw "Unauthorize Action";
+      }
+      const [post, totalPosts] = await ctx.prisma.$transaction([
+        ctx.prisma.post.create({
+          data: {
+            content: input.content,
+            authorId: authorId,
+          },
+        }),
+        ctx.prisma.post.count(),
+      ]);
+
+      return {
+        post,
+        totalPosts,
+      };
+    }),
 });

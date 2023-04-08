@@ -2,7 +2,7 @@ import { api } from "~/utils/api";
 
 function Post() {
   const { data: posts, refetch } = api.post.getPost.useQuery();
-  const createPost = api.post.createPost.useMutation({
+  const createPostTransaction = api.post.createPostTransaction.useMutation({
     onSuccess: () => {
       refetch();
     },
@@ -19,7 +19,9 @@ function Post() {
     const formInput = e.target as HTMLFormElement;
     const form = new FormData(formInput);
 
-    await createPost.mutateAsync({ content: form.get("content") as string });
+    await createPostTransaction.mutateAsync({
+      content: form.get("content") as string,
+    });
 
     formInput.reset();
   };
@@ -58,7 +60,7 @@ function Post() {
               "Loading ..."}
           </li>
         ))}
-        {createPost.isLoading && "Loading ..."}
+        {createPostTransaction.isLoading && "Loading ..."}
       </ul>
     </div>
   );
